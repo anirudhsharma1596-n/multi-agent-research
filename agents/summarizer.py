@@ -3,14 +3,19 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from utils.state import ResearchState
 from config import Config
+from utils.logger import AgentLogger
+
 
 llm = ChatOpenAI(
     model=Config.MODEL_NAME,
     api_key=Config.OPENAI_API_KEY,
     temperature=0.3   # slight creativity for better writing
 )
+logger = AgentLogger()
 
 def summarizer_agent(state: ResearchState) -> ResearchState:
+    logger.log("Summarizer", "started", {"results_count": len(state["search_results"])})
+
     """
     Job: Take raw search results, produce a clean summary.
     Input:  state['search_results'], state['query']
@@ -49,6 +54,7 @@ def summarizer_agent(state: ResearchState) -> ResearchState:
     response = llm.invoke(messages)
 
     print(f"[Summarizer] Summary generated ({len(response.content)} chars)")
+    logger.log("Summarizer", "completed", {"summary_length": len(response.content)})
 
     return {
         **state,

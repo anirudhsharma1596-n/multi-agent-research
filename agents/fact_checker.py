@@ -3,6 +3,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from utils.state import ResearchState
 from config import Config
+from utils.logger import AgentLogger
 
 llm = ChatOpenAI(
     model=Config.MODEL_NAME,
@@ -10,7 +11,11 @@ llm = ChatOpenAI(
     temperature=0   # facts must be deterministic
 )
 
+logger=AgentLogger()
+
 def fact_checker_agent(state: ResearchState) -> ResearchState:
+    logger.log("FactChecker", "started", {"results_count": len(state["summary"])})
+
     """
     Job: Verify the summary against raw sources, flag issues.
     Input:  state['summary'], state['search_results']
@@ -61,6 +66,7 @@ def fact_checker_agent(state: ResearchState) -> ResearchState:
         is_reliable = True  # medium is acceptable
 
     print(f"[Fact-Checker] Reliable: {is_reliable}")
+    logger.log("FactChecker", "completed", {"results": state["fact_check_result"]})
 
     return {
         **state,
