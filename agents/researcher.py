@@ -41,14 +41,14 @@ def researcher_agent(state: ResearchState) -> ResearchState:
         try:
             results = run_search(sq)
 
-            # Tavily returns a list of dicts with 'content' and 'url'
-            if isinstance(results, list):
-                for r in results:
-                    if isinstance(r, dict):
-                        all_results.append(r.get("content", ""))
-                        all_sources.append(r.get("url", ""))
-            elif isinstance(results, str):
-                all_results.append(results)
+            print(f"[Researcher] Got {len(results)} results for: {sq}")
+
+            for r in results:
+                content = r.get("content", "").strip()
+                url     = r.get("url", "")
+                if content:                    # only add non-empty results
+                    all_results.append(content)
+                    all_sources.append(url)
 
         except Exception as e:
             print(f"[Researcher] Search error: {e}")

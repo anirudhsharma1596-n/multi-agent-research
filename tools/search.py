@@ -19,5 +19,22 @@ def run_search(query: str) -> dict:
     Used directly by the Researcher agent.
     """
     tool = get_search_tool()
-    results = tool.invoke({"query": query})
-    return results
+    raw = tool.invoke({"query": query})
+
+    print(f"[Search] Raw response type : {type(raw)}")
+
+    # NEW langchain-tavily format: {"results": [...], "answer": "..."}
+    if isinstance(raw,dict) and "results" in raw:
+        return raw["results"]
+    
+    # OLD format: plain list of dicts
+    if isinstance(raw, list):
+        return raw
+
+    # Fallback: wrap string response
+    if isinstance(raw, str):
+        return [{"content": raw, "url": ""}]
+
+    return []
+    
+
