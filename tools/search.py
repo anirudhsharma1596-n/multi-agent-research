@@ -1,4 +1,4 @@
-# tools/search.py
+
 from langchain_tavily import TavilySearch
 from config import Config
 import os
