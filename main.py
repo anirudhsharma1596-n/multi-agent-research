@@ -1,11 +1,21 @@
 # main.py
 from langgraph.graph import StateGraph, END
+import logging
 
 from utils.state import ResearchState
 from agents.researcher    import researcher_agent
 from agents.summarizer    import summarizer_agent
 from agents.fact_checker  import fact_checker_agent
 from agents.supervisor    import supervisor_agent, route_next
+from utils.validators import QueryInput
+from pydantic import ValidationError
+
+logging.basicConfig(
+    level = logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S"
+)
+
 
 def build_graph() -> StateGraph:
     """
@@ -97,4 +107,10 @@ if __name__ == "__main__":
     import sys
     query = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else \
             "What are the latest AI breakthroughs in 2025?"
-    run_research(query)
+    try:
+        validated = QueryInput(query=query)
+        result=run_research(query)
+    except ValidationError as e:
+        print(f"Invalid input: {e.errors()[0]['msg']}")
+   
+    

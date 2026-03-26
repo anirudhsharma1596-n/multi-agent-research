@@ -5,6 +5,7 @@ from tools.search import run_search
 from config import Config
 from utils.logger import AgentLogger
 from utils.cache import QueryCache
+from utils.retry import with_retry
 
 llm = ChatOpenAI(
     model=Config.MODEL_NAME,
@@ -13,6 +14,10 @@ llm = ChatOpenAI(
 )
 logger = AgentLogger()
 cache  = QueryCache()
+
+@with_retry(max_retries=3, backoff=2.0)
+def call_llm(messages):
+    return llm.invoke(messages)
 
 def researcher_agent(state: ResearchState) -> ResearchState:
     start = __import__("time").time()
@@ -33,7 +38,7 @@ def researcher_agent(state: ResearchState) -> ResearchState:
         HumanMessage(content=state["query"])
     ]
 
-    response = llm.invoke(messages)
+    response = call_llm(messages)
     search_queries = response.content.strip().split("\n")
     search_queries = [q.strip() for q in search_queries if q.strip()]
     logger.log("Researcher", "queries_generated", {"queries": search_queries})
@@ -69,7 +74,7 @@ def researcher_agent(state: ResearchState) -> ResearchState:
         except Exception as e:
             logger.log("Researcher", "search_error", {"error": str(e)})
             print(f"[Researcher] Search error: {e}")
-            
+
     elapsed = round(__import__("time").time() - start, 2)
     logger.log("Researcher", "completed", {
         "results_count": len(all_results),
